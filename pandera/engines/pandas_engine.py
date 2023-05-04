@@ -236,24 +236,19 @@ def _register_numpy_numbers(
         # e.g.: numpy.int64
         np_dtype = getattr(np, f"{builtin_name}{bit_width}")
 
-        equivalents = set(
-            (
-                np_dtype,
-                # e.g.: pandera.dtypes.Int64
-                getattr(dtypes, f"{pandera_name}{bit_width}"),
-                getattr(dtypes, f"{pandera_name}{bit_width}")(),
-            )
-        )
+        equivalents = {
+            np_dtype,
+            getattr(dtypes, f"{pandera_name}{bit_width}"),
+            getattr(dtypes, f"{pandera_name}{bit_width}")(),
+        }
 
         if np_dtype == default_pd_dtype:
-            equivalents |= set(
-                (
-                    default_pd_dtype,
-                    builtin_name,
-                    getattr(dtypes, pandera_name),
-                    getattr(dtypes, pandera_name)(),
-                )
-            )
+            equivalents |= {
+                default_pd_dtype,
+                builtin_name,
+                getattr(dtypes, pandera_name),
+                getattr(dtypes, pandera_name)(),
+            }
             if builtin_type:
                 equivalents.add(builtin_type)
 
@@ -625,9 +620,7 @@ class DateTime(DataType, dtypes.Timestamp):
 
     def coerce_value(self, value: Any) -> Any:
         """Coerce an value to specified datatime type."""
-        if value is pd.NaT:
-            return value
-        return super().coerce_value(value)
+        return value if value is pd.NaT else super().coerce_value(value)
 
     @classmethod
     def from_parametrized_dtype(cls, pd_dtype: pd.DatetimeTZDtype):

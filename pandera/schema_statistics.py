@@ -83,7 +83,7 @@ def parse_check_statistics(check_stats: Union[Dict[str, Any], None]):
 
 def get_dataframe_schema_statistics(dataframe_schema):
     """Get statistical properties from dataframe schema."""
-    statistics = {
+    return {
         "columns": {
             col_name: {
                 "dtype": column.dtype,
@@ -104,7 +104,6 @@ def get_dataframe_schema_statistics(dataframe_schema):
         ),
         "coerce": dataframe_schema.coerce,
     }
-    return statistics
 
 
 def _get_series_base_schema_statistics(series_schema_base):

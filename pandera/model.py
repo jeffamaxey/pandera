@@ -123,11 +123,11 @@ def _convert_extras_to_checks(extras: Dict[str, Any]) -> List[Check]:
 class _MetaSchema(type):
     """Add string representations, mainly for pydantic."""
 
-    def __repr__(cls):
-        return str(cls)
+    def __repr__(self):
+        return str(self)
 
-    def __str__(cls):
-        return cls.__name__
+    def __str__(self):
+        return self.__name__
 
 
 class SchemaModel(metaclass=_MetaSchema):
@@ -291,8 +291,8 @@ class SchemaModel(metaclass=_MetaSchema):
             for annotation, _ in fields.values()
         )
 
-        columns: Dict[str, schema_components.Column] = {}
         indices: List[schema_components.Index] = []
+        columns: Dict[str, schema_components.Column] = {}
         for field_name, (annotation, field) in fields.items():
             field_checks = checks.get(field_name, [])
             field_name = field.name
@@ -301,8 +301,7 @@ class SchemaModel(metaclass=_MetaSchema):
             if annotation.metadata:
                 if field.dtype_kwargs:
                     raise TypeError(
-                        "Cannot specify redundant 'dtype_kwargs' "
-                        + f"for {annotation.raw_annotation}."
+                        f"Cannot specify redundant 'dtype_kwargs' for {annotation.raw_annotation}."
                         + "\n Usage Tip: Drop 'typing.Annotated'."
                     )
                 dtype_kwargs = _get_dtype_kwargs(annotation)
@@ -372,7 +371,7 @@ class SchemaModel(metaclass=_MetaSchema):
         bases = inspect.getmro(cls)[:-1]  # bases -> SchemaModel -> object
         attrs = {}
         for base in reversed(bases):
-            attrs.update(base.__dict__)
+            attrs |= base.__dict__
         return attrs
 
     @classmethod
@@ -516,13 +515,14 @@ class SchemaModel(metaclass=_MetaSchema):
 def _build_schema_index(
     indices: List[schema_components.Index], **multiindex_kwargs: Any
 ) -> Optional[SchemaIndex]:
-    index: Optional[SchemaIndex] = None
     if indices:
-        if len(indices) == 1:
-            index = indices[0]
-        else:
-            index = schema_components.MultiIndex(indices, **multiindex_kwargs)
-    return index
+        return (
+            indices[0]
+            if len(indices) == 1
+            else schema_components.MultiIndex(indices, **multiindex_kwargs)
+        )
+    else:
+        return None
 
 
 def _regex_filter(seq: Iterable, regexps: Iterable[str]) -> Set[str]:
